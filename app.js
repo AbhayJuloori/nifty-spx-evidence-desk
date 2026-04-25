@@ -418,6 +418,10 @@ const els = {
   workspaceLabel: document.querySelector("#workspaceLabel"),
   status: document.querySelector("#status"),
   legend: document.querySelector("#legend"),
+  liveCorrelationStat: document.querySelector("#liveCorrelationStat"),
+  liveHitRateStat: document.querySelector("#liveHitRateStat"),
+  liveBetaStat: document.querySelector("#liveBetaStat"),
+  liveRSquaredStat: document.querySelector("#liveRSquaredStat"),
   insightPanel: document.querySelector("#insightPanel"),
   thesisPanel: document.querySelector("#thesisPanel"),
   evidenceTable: document.querySelector("#evidenceTable"),
@@ -914,7 +918,10 @@ async function loadData() {
     } else {
       didRender = await loadRangeData(requestId);
     }
-    if (didRender && requestId === state.dataRequestId) loadLeadLagStudy();
+    if (didRender && requestId === state.dataRequestId) {
+      loadLeadLagStudy();
+      renderStatsPanel();
+    }
   } catch (error) {
     if (requestId !== state.dataRequestId) return;
     setStatus(error.message, true);
@@ -2811,6 +2818,52 @@ function triggerPageEntrance(page) {
   state.pageEntranceTimer = window.setTimeout(() => {
     sections.forEach((section) => section.classList.remove("page-enter"));
   }, 1300);
+}
+
+let statsModulePromise = null;
+
+function setLiveStatsValues({ correlation = NaN, hitRate = NaN, beta = NaN, rSquared = NaN } = {}) {
+  if (els.liveCorrelationStat) els.liveCorrelationStat.textContent = formatCorrelation(correlation);
+  if (els.liveHitRateStat) els.liveHitRateStat.textContent = Number.isFinite(hitRate) ? `${Math.round(hitRate * 100)}%` : "--";
+  if (els.liveBetaStat) els.liveBetaStat.textContent = Number.isFinite(beta) ? beta.toFixed(2) : "--";
+  if (els.liveRSquaredStat) els.liveRSquaredStat.textContent = Number.isFinite(rSquared) ? `${Math.round(rSquared * 100)}%` : "--";
+}
+
+function returnsForStatsPanel(bars, dailyReturns) {
+  const returns = dailyReturns(bars);
+  if (state.mode !== "session" && !["5m", "15m", "60m"].includes(requestedInterval())) return returns;
+  return returns.map((point, index) => ({ ...point, date: index }));
+}
+
+async function renderStatsPanel() {
+  const niftyBars = state.data.nifty || [];
+  const spxBars = state.data.spx || [];
+  if (niftyBars.length < 2 || spxBars.length < 2) {
+    setLiveStatsValues();
+    return;
+  }
+
+  try {
+    statsModulePromise ||= import("./modules/stats.js");
+    const { dailyReturns, rollingPearson, hitRate, olsRegression } = await statsModulePromise;
+    const niftyReturns = returnsForStatsPanel(niftyBars, dailyReturns);
+    const spxReturns = returnsForStatsPanel(spxBars, dailyReturns);
+    const regression = olsRegression(spxReturns, niftyReturns);
+    const hits = hitRate(spxReturns, niftyReturns);
+    const windowSize = Math.min(30, niftyReturns.length, spxReturns.length);
+    const rolling = windowSize >= 2 ? rollingPearson(spxReturns, niftyReturns, windowSize) : [];
+    const latestCorrelation = rolling.at(-1)?.r ?? NaN;
+
+    setLiveStatsValues({
+      correlation: latestCorrelation,
+      hitRate: hits.rate,
+      beta: regression.beta,
+      rSquared: regression.rSquared,
+    });
+  } catch (error) {
+    console.error("Unable to render live stats panel", error);
+    setLiveStatsValues();
+  }
 }
 
 wireControls();

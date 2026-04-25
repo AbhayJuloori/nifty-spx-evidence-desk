@@ -1,14 +1,32 @@
 :root {
+  --bg: #08080f;
+  --surface: #111118;
+  --border: #1e1e2e;
+  --nifty: #00d6a3;
+  --spx: #ff654d;
+  --text: #e2e2f0;
+  --muted: #6e6e8a;
+  --positive: #00d6a3;
+  --negative: #ff654d;
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-12: 48px;
+  --space-16: 64px;
+  --card-radius: 10px;
+  --card-shadow: 0 1px 3px rgba(0,0,0,0.4), 0 0 0 1px var(--border);
+  --transition: 200ms ease;
+  --font: -apple-system, BlinkMacSystemFont, Inter, sans-serif;
+  --mono: ui-monospace, SFMono-Regular, Menlo, monospace;
   --page: #020303;
-  --surface: rgba(12, 14, 15, 0.82);
   --surface-strong: rgba(16, 19, 20, 0.96);
   --ink: #f6f7f2;
-  --muted: #9ba09c;
   --line: rgba(255, 255, 255, 0.12);
   --line-strong: rgba(255, 255, 255, 0.18);
-  --nifty: #00d6a3;
   --nifty-soft: rgba(0, 214, 163, 0.14);
-  --spx: #ff654d;
   --spx-soft: rgba(255, 101, 77, 0.14);
   --accent: #d4ff2c;
   --danger: #ff8273;
@@ -1849,6 +1867,51 @@ body[data-page="home"] .chart-area {
   background: #0f1210;
 }
 
+.live-stats-strip {
+  min-height: 92px;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+  padding: 12px 14px;
+  border-top: 1px solid var(--line);
+  background: rgba(17, 20, 18, 0.92);
+}
+
+.live-stat-card {
+  min-width: 0;
+  padding: 12px 14px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.012)),
+    rgba(255, 255, 255, 0.035);
+  font-variant-numeric: tabular-nums;
+}
+
+.live-stat-card span,
+.live-stat-card small {
+  display: block;
+  color: var(--muted);
+  font-size: 0.72rem;
+  font-weight: 760;
+}
+
+.live-stat-card span {
+  text-transform: uppercase;
+}
+
+.live-stat-card strong {
+  display: block;
+  margin-top: 6px;
+  font-size: 1.26rem;
+  line-height: 1;
+}
+
+.live-stat-card small {
+  margin-top: 5px;
+  line-height: 1.25;
+}
+
 .replay-controls {
   min-height: 58px;
   display: grid;
@@ -2605,8 +2668,13 @@ body[data-page="home"] .chart-area {
     min-height: 430px;
   }
 
-  .replay-controls {
+  .live-stats-strip {
     order: 3;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .replay-controls {
+    order: 4;
     grid-template-columns: 1fr;
   }
 
@@ -2615,7 +2683,7 @@ body[data-page="home"] .chart-area {
   }
 
   .insight-panel {
-    order: 4;
+    order: 5;
   }
 
   select {

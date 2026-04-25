@@ -169,6 +169,28 @@
             <div id="legend" class="legend" aria-live="polite"></div>
           </div>
           <div id="chartArea" class="chart-area"></div>
+          <div class="live-stats-strip" aria-label="Live statistical summary">
+            <div class="live-stat-card">
+              <span>Correlation</span>
+              <strong id="liveCorrelationStat">--</strong>
+              <small>Rolling returns</small>
+            </div>
+            <div class="live-stat-card">
+              <span>Hit rate</span>
+              <strong id="liveHitRateStat">--</strong>
+              <small>Prior S&amp;P sign</small>
+            </div>
+            <div class="live-stat-card">
+              <span>Beta</span>
+              <strong id="liveBetaStat">--</strong>
+              <small>NIFTY vs S&amp;P</small>
+            </div>
+            <div class="live-stat-card">
+              <span>R-squared</span>
+              <strong id="liveRSquaredStat">--</strong>
+              <small>OLS fit</small>
+            </div>
+          </div>
           <div id="replayControls" class="replay-controls" aria-label="Session replay controls">
             <label for="replaySlider">Session scrub</label>
             <input id="replaySlider" type="range" min="0" max="0" value="0" />
