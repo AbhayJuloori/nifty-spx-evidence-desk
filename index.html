@@ -1,0 +1,377 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>NIFTY 50 vs S&amp;P 500 Performance Overlay</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body data-page="home">
+    <nav class="stage-nav" aria-label="Showcase pages">
+      <div class="nav-shell">
+        <div class="nav-brand" aria-label="Product brand">
+          <span class="brand-mark">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M3 16.5L8 12l4 3 6-7 3 2.5" class="brand-line brand-line-spx" />
+              <path d="M3 18l5-4 4 1.5 6-3.5 3 1" class="brand-line brand-line-nifty" />
+            </svg>
+          </span>
+          <div class="brand-copy">
+            <strong>NIFTY / S&amp;P</strong>
+            <small>Evidence desk</small>
+          </div>
+        </div>
+        <div class="nav-links">
+          <button type="button" class="stage-link active" data-go-page="home">Live overlay</button>
+          <button type="button" class="stage-link" data-go-page="stories">Story deck</button>
+          <button type="button" class="stage-link" data-go-page="detail">Deep dive</button>
+          <button type="button" class="stage-link" data-go-page="macro">Macro notebook</button>
+        </div>
+      </div>
+    </nav>
+    <main class="app-shell">
+      <section class="topbar reveal" data-page-section="home" aria-label="Market chart controls">
+        <div class="identity">
+          <p class="eyebrow">Cross-market relationship lab</p>
+          <h1>NIFTY / S&amp;P Evidence Desk</h1>
+          <p class="subtitle">A cleaner way to compare the prior US session with the next India session, then test where the relationship holds and where it breaks.</p>
+          <p class="builder-note">Percent growth first. Macro context second. The point is to separate signal from story.</p>
+          <div class="hero-actions">
+            <button id="storyPageButton" type="button" data-go-page="stories">Explore stories</button>
+            <button type="button" data-go-page="detail">Open insight windows</button>
+            <button id="tourButton" type="button">Start narrated tour</button>
+            <button id="copySummaryButton" class="utility-button" type="button">Copy thesis</button>
+            <button id="printButton" class="utility-button" type="button">Print view</button>
+          </div>
+        </div>
+
+        <div class="market-strip" aria-live="polite">
+          <div class="market-pill nifty">
+            <span>NIFTY 50</span>
+            <strong id="niftyReturn">--</strong>
+          </div>
+          <div class="market-pill spx">
+            <span>S&amp;P 500</span>
+            <strong id="spxReturn">--</strong>
+          </div>
+          <div class="market-pill spread">
+            <span>Gap</span>
+            <strong id="spreadReturn">--</strong>
+          </div>
+          <div class="market-pill">
+            <span>Corr</span>
+            <strong id="corrMetric">--</strong>
+          </div>
+          <div class="market-pill">
+            <span>Same Dir</span>
+            <strong id="sameDirMetric">--</strong>
+          </div>
+        </div>
+      </section>
+
+      <section class="control-deck reveal" data-page-section="home" aria-label="Chart settings">
+        <div class="control-group case-wide advanced-control">
+          <label class="control-label" for="caseSelect">Case study</label>
+          <select id="caseSelect">
+            <option value="custom">Custom analysis</option>
+          </select>
+        </div>
+
+        <div class="control-group advanced-control">
+          <label class="control-label" for="modeSelect">Mode</label>
+          <select id="modeSelect">
+            <option value="session">Session date</option>
+            <option value="range">Long range</option>
+          </select>
+        </div>
+
+        <div class="control-group wide" id="rangeGroup">
+          <span class="control-label">Duration</span>
+          <div class="segmented" id="rangeButtons" role="group" aria-label="Duration"></div>
+        </div>
+
+        <div class="control-group session-only advanced-control" id="dateGroup">
+          <label class="control-label" for="sessionDate">Date</label>
+          <div class="date-tools">
+            <button id="previousDate" type="button" aria-label="Previous trading date">&lt;</button>
+            <input id="sessionDate" type="date" />
+            <button id="nextDate" type="button" aria-label="Next trading date">&gt;</button>
+          </div>
+        </div>
+
+        <div class="control-group session-only advanced-control" id="alignGroup">
+          <label class="control-label" for="alignMode">Time</label>
+          <select id="alignMode">
+            <option value="session">Session aligned</option>
+            <option value="exact">Exact time</option>
+          </select>
+        </div>
+
+        <div class="control-group">
+          <label class="control-label" for="chartType">Chart</label>
+          <select id="chartType">
+            <option value="line">Line</option>
+            <option value="candles">Candles</option>
+            <option value="baseline">Baseline</option>
+          </select>
+        </div>
+
+        <div class="control-group">
+          <label class="control-label" for="chartView">View</label>
+          <select id="chartView">
+            <option value="overlay">Overlay</option>
+            <option value="difference">Difference</option>
+            <option value="split">Split</option>
+          </select>
+        </div>
+
+        <div class="control-group advanced-control">
+          <label class="control-label" for="intervalSelect">Granularity</label>
+          <select id="intervalSelect">
+            <option value="auto">Auto</option>
+            <option value="5m">5 min</option>
+            <option value="15m">15 min</option>
+            <option value="60m">1 hour</option>
+            <option value="1d">1 day</option>
+            <option value="1wk">1 week</option>
+            <option value="1mo">1 month</option>
+          </select>
+        </div>
+
+        <div class="control-group toggles">
+          <label class="switch">
+            <input type="checkbox" id="rebaseVisible" />
+            <span>Rebase zoom</span>
+          </label>
+          <label class="switch">
+            <input type="checkbox" id="ma20" />
+            <span data-tip="Moving average: the average closing value over the last 20 bars. It smooths noise so the trend is easier to read.">20 MA</span>
+          </label>
+          <label class="switch">
+            <input type="checkbox" id="ma50" />
+            <span data-tip="Moving average: the average closing value over the last 50 bars. It is slower and useful for trend context.">50 MA</span>
+          </label>
+        </div>
+
+        <div class="control-group tools">
+          <button id="fitButton" type="button">Fit</button>
+          <button id="refreshButton" type="button">Refresh</button>
+        </div>
+      </section>
+
+      <section class="research-grid reveal" data-page-section="home">
+        <div class="workspace">
+          <div class="chart-header">
+            <div>
+              <div id="workspaceLabel" class="workspace-label">Overlay lens</div>
+              <div id="status" class="status">Loading market data...</div>
+            </div>
+            <div id="legend" class="legend" aria-live="polite"></div>
+          </div>
+          <div id="chartArea" class="chart-area"></div>
+          <div id="replayControls" class="replay-controls" aria-label="Session replay controls">
+            <label for="replaySlider">Session scrub</label>
+            <input id="replaySlider" type="range" min="0" max="0" value="0" />
+            <output id="replayReadout">Replay ready</output>
+          </div>
+        </div>
+
+        <aside class="analysis-column" aria-label="Research evidence">
+          <section id="thesisPanel" class="thesis-panel"></section>
+          <section id="insightPanel" class="insight-panel" aria-live="polite"></section>
+        </aside>
+      </section>
+
+      <section class="story-theatre reveal" data-page-section="detail" aria-label="Animated market story">
+        <div class="story-copy">
+          <p class="eyebrow">Guided story</p>
+          <h2 id="storyTitle">Replay the relationship</h2>
+          <p id="storySummary" class="story-summary">The story builds in layers: prior S&amp;P move, next NIFTY response, then the spread and macro context.</p>
+          <p id="storyNarration" class="story-playback">The chart draws one layer at a time, then settles into a readable final frame.</p>
+          <div id="storyTakeaway" class="story-takeaway"></div>
+          <div id="storySteps" class="story-steps"></div>
+        </div>
+        <div class="story-visual">
+          <div class="story-legend" aria-hidden="true">
+            <span class="story-key story-key-spx">Prior S&amp;P session</span>
+            <span class="story-key story-key-nifty">Next NIFTY session</span>
+            <span class="story-key story-key-spread">Spread</span>
+          </div>
+          <div class="story-stage">
+            <svg viewBox="0 0 640 340" role="img" aria-label="Animated S&P and NIFTY relationship lines">
+              <defs>
+                <linearGradient id="spxGlow" x1="0" x2="1">
+                  <stop offset="0%" stop-color="#ff654d" />
+                  <stop offset="100%" stop-color="#ffd166" />
+                </linearGradient>
+                <linearGradient id="niftyGlow" x1="0" x2="1">
+                  <stop offset="0%" stop-color="#00d6a3" />
+                  <stop offset="100%" stop-color="#8fb7ff" />
+                </linearGradient>
+              </defs>
+              <g class="story-grid-lines">
+                <path d="M40 70H600M40 140H600M40 210H600M40 280H600" />
+                <path d="M120 42V302M240 42V302M360 42V302M480 42V302" />
+              </g>
+              <path id="storySpxLine" class="story-line spx-line" d="M45 245 C95 180 135 196 190 150 S295 102 350 118 S455 82 595 78" />
+              <path id="storyNiftyLine" class="story-line nifty-line" d="M45 245 C95 230 132 255 192 248 S295 218 350 230 S455 250 595 196" />
+              <path id="storySpreadBand" class="story-band" d="M45 245 C95 205 135 220 190 199 S295 160 350 174 S455 166 595 137" />
+            </svg>
+          </div>
+          <div class="story-axis" aria-hidden="true">
+            <span>Start</span>
+            <span>Finish</span>
+          </div>
+          <div class="story-readout">
+            <span id="storyPhase">Phase 1</span>
+            <strong id="storyMetric">S&P path forming</strong>
+          </div>
+        </div>
+      </section>
+
+      <section id="insightWindows" class="insight-windows reveal" data-page-section="detail" aria-label="Specialized insight windows">
+        <div class="window-heading">
+          <div>
+            <p class="eyebrow">Interpretability layer</p>
+            <h2>How to read this move</h2>
+          </div>
+          <p>Start with the plain-English read, then move outward into signal strength, divergence, currency pressure, and US market breadth.</p>
+        </div>
+        <div class="window-grid">
+          <article id="coachWindow" class="terminal-window large"></article>
+          <article id="leadWindow" class="terminal-window"></article>
+          <article id="divergenceWindow" class="terminal-window"></article>
+          <article id="fxWindow" class="terminal-window"></article>
+          <article id="factorWindow" class="terminal-window"></article>
+        </div>
+      </section>
+
+      <section class="story-cover reveal" data-page-section="stories" aria-label="Story deck intro">
+        <div class="story-cover-copy">
+          <p class="eyebrow">Story deck</p>
+          <h2>Ten market stories, built to be read quickly.</h2>
+          <p>Each tile opens one focused deep dive: what happened, what it likely meant, and what to check next.</p>
+        </div>
+        <div class="story-cover-media">
+          <figure class="cover-shot cover-shot-wide">
+            <img src="./assets/analyst-office.jpg" alt="Analyst desk with market screens" />
+            <figcaption>Research desk</figcaption>
+          </figure>
+          <figure class="cover-shot">
+            <img src="./assets/chart-tablet.jpg" alt="Tablet showing market charts" />
+            <figcaption>Signal replay</figcaption>
+          </figure>
+          <figure class="cover-shot">
+            <img src="./assets/city-macro.jpg" alt="City skyline used as macro context" />
+            <figcaption>Macro context</figcaption>
+          </figure>
+        </div>
+      </section>
+
+      <section class="macro-cover reveal" data-page-section="macro" aria-label="Macro notebook intro">
+        <div class="macro-cover-copy">
+          <p class="eyebrow">Macro notebook</p>
+          <h2>Macro context without the hand-waving.</h2>
+          <p>Dollar pressure, AI concentration, oil shocks, and India catch-up are framed as conditions you can actually verify.</p>
+        </div>
+        <div class="macro-cover-media">
+          <figure class="cover-shot cover-shot-wide">
+            <img src="./assets/city-macro.jpg" alt="Night city skyline representing global macro context" />
+            <figcaption>Global backdrop</figcaption>
+          </figure>
+          <figure class="cover-shot">
+            <img src="./assets/market-desk.jpg" alt="Market desk with multiple charts" />
+            <figcaption>Market tape</figcaption>
+          </figure>
+          <figure class="cover-shot">
+            <img src="./assets/analyst-office.jpg" alt="Analyst office with screens" />
+            <figcaption>Flow + narrative</figcaption>
+          </figure>
+        </div>
+      </section>
+
+      <section class="top-insights reveal" data-page-section="macro" aria-label="Top insight decks">
+        <div class="section-heading compact">
+          <div>
+            <p class="eyebrow">Insight decks</p>
+            <h2>Recent and global stories</h2>
+          </div>
+          <p>Recruiter-friendly summaries first. Each tile can expand into the mechanics behind the claim.</p>
+        </div>
+        <div class="insight-deck-grid">
+          <div>
+            <h3>Top recent insights</h3>
+            <div id="recentInsightDeck" class="story-card-list"></div>
+          </div>
+          <div>
+            <h3>Top global insights</h3>
+            <div id="globalInsightDeck" class="story-card-list"></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="horizon-lab reveal" data-page-section="macro" aria-label="Lag, horizon, and risk lab">
+        <div class="section-heading compact">
+          <div>
+            <p class="eyebrow">Portfolio-lab rigor</p>
+            <h2>Lag sweep and risk cockpit</h2>
+          </div>
+          <p>Inspired by classic comparison tools, but pointed at the interview question: which horizon has signal, and what risk came with the return?</p>
+        </div>
+        <div id="lagSweep" class="lag-sweep"></div>
+        <div id="riskCockpit" class="risk-cockpit"></div>
+      </section>
+
+      <section class="context-board-section reveal" data-page-section="macro" aria-label="Context story board">
+        <div class="section-heading compact">
+          <div>
+            <p class="eyebrow">Divergence investigation board</p>
+            <h2>Recent misses with macro clues</h2>
+          </div>
+          <p>These cards are generated from recent market data. FX, Brent, and Nasdaq-vs-S&amp;P are treated as clues, not automatic explanations.</p>
+        </div>
+        <div id="contextStories" class="context-stories"></div>
+      </section>
+
+      <section class="future-lab-section reveal" data-page-section="macro" aria-label="Forward scenario notebook">
+        <div class="section-heading compact">
+          <div>
+            <p class="eyebrow">Forward thesis notebook</p>
+            <h2>What I would watch next</h2>
+          </div>
+          <p>A finance interview should not end at “the chart moved.” These conditional scenarios turn macro themes into falsifiable things to monitor.</p>
+        </div>
+        <div id="futureScenarios" class="future-scenarios"></div>
+      </section>
+
+      <section class="case-gallery-section reveal" data-page-section="stories" aria-label="Replay case gallery">
+        <div class="section-heading compact">
+          <div>
+            <p class="eyebrow">Replay gallery</p>
+            <h2>Pick one of 10 market stories</h2>
+          </div>
+          <p>Each tile opens a guided deep dive with synced narration, chart motion, and beginner-friendly interpretation.</p>
+        </div>
+        <div id="caseGallery" class="case-gallery"></div>
+      </section>
+
+      <section class="evidence-section reveal" data-page-section="macro" aria-label="Historical evidence">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">Historical sample</p>
+            <h2>Lead-lag evidence</h2>
+          </div>
+          <p>Association only, not a forecast. The table compares one completed S&amp;P session with the next NIFTY session.</p>
+        </div>
+        <div id="evidenceTable" class="evidence-table"></div>
+      </section>
+
+      <section class="source-ledger-section reveal" data-page-section="macro" aria-label="Data provenance">
+        <div id="sourceLedger" class="source-ledger"></div>
+      </section>
+    </main>
+
+    <script src="./lightweight-charts.standalone.production.js"></script>
+    <script src="./app.js"></script>
+  </body>
+</html>
