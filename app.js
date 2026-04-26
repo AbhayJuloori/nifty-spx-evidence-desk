@@ -2459,6 +2459,12 @@ async function loadLeadLagStudy() {
     const oneYearCutoff = addDaysISO(defaultSessionDate(), -365);
     const recentPairs = pairs.filter((point) => point.niftyDate >= oneYearCutoff);
     const strongPairs = recentPairs.filter((point) => Math.abs(point.spx) >= 1);
+    statsModulePromise ||= import("./modules/stats.js");
+    const { olsRegression, grangerTest } = await statsModulePromise;
+    const spxOlsInput = recentPairs.map((p) => ({ date: p.spxDate, return: p.spx }));
+    const niftyOlsInput = recentPairs.map((p) => ({ date: p.niftyDate, return: p.nifty }));
+    const olsResult = olsRegression(spxOlsInput, niftyOlsInput);
+    const grangerResult = grangerTest(niftyOlsInput, spxOlsInput, 1);
     const lagSweep = buildLagSweep(niftyReturns, spxReturns, oneYearCutoff);
     const selectedSpxDate = activeCase()?.spxDate || state.sessionDate;
     const selectedSpx = spxByDate.get(selectedSpxDate);
@@ -2492,6 +2498,8 @@ async function loadLeadLagStudy() {
       weekly: summarizePairs(weeklyPairs),
       monthly: summarizePairs(monthlyPairs),
       strong: summarizePairs(strongPairs),
+      ols: { alpha: olsResult.alpha, beta: olsResult.beta, rSquared: olsResult.rSquared },
+      granger: { fStat: grangerResult.fStat, pValue: grangerResult.pValue, significant: grangerResult.significant },
       lagSweep,
       fx: summarizeFx(fxPairs),
       oil: summarizeMacro(macroPairs, "oil"),
