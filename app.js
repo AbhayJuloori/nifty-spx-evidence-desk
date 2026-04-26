@@ -2885,20 +2885,40 @@ function buildThesisSummary() {
   const selected = activeCase();
   const bestLag = study?.lagSweep?.reduce((best, row) => (!best || row.hitRate > best.hitRate ? row : best), null);
   const topMiss = study?.contextRows?.[0];
+  const ols = study?.ols;
+  const granger = study?.granger;
+  const fmt2 = (v) => (Number.isFinite(v) ? v.toFixed(2) : '--');
+  const fmt4 = (v) => (Number.isFinite(v) ? v.toFixed(4) : '--');
   return [
-    "NIFTY / S&P Evidence Desk thesis",
-    selected ? `Selected case: ${selected.title} (${selected.spxDate} S&P -> ${selected.niftyDate} NIFTY).` : `Custom session: ${state.sessionDate}.`,
-    `Main framing: compare percent growth, ignore currency translation for the overlay, then use USD/INR as a context lens.`,
+    "NIFTY / S&P Evidence Desk — DS Model Summary",
+    "",
+    "MODEL",
+    "OLS: NIFTY_t = α + β·SPX_{t-1}",
+    `β = ${fmt2(ols?.beta)}  |  R² = ${fmt2(ols?.rSquared)}  |  α = ${fmt4(ols?.alpha)}`,
+    `Hit rate: ${study?.recent ? `${Math.round(study.recent.hitRate * 100)}%` : "--"}  |  n = ${study?.recent?.sample ?? "--"} pairs`,
+    `Granger causality: F = ${fmt2(granger?.fStat)}, p = ${fmt4(granger?.pValue)}${granger?.significant ? " (significant at 5%)" : ""}`,
+    "",
+    "SELECTED CASE",
+    selected ? `${selected.title} (${selected.spxDate} S&P ${formatPercent(selected.spxReturn)} → ${selected.niftyDate} NIFTY ${formatPercent(selected.niftyReturn)})` : `Custom session: ${state.sessionDate}.`,
+    "",
+    "SIGNAL STRENGTH",
     bestLag
-      ? `Best recent lag sample: ${bestLag.label}, ${Math.round(bestLag.hitRate * 100)}% same direction, ${formatCorrelation(bestLag.correlation)} correlation across ${bestLag.sample} pairs.`
-      : "Lag sample is loading.",
+      ? `Best lag: ${bestLag.label} — ${Math.round(bestLag.hitRate * 100)}% same direction, ${formatCorrelation(bestLag.correlation)} correlation (n=${bestLag.sample})`
+      : "Lag sweep loading.",
     study?.strong?.sample
-      ? `Strong S&P sessions: ${Math.round(study.strong.hitRate * 100)}% same-direction next NIFTY response when |S&P| >= 1%.`
-      : "Strong-move sample is loading.",
+      ? `Strong S&P sessions (|SPX| ≥ 1%): ${Math.round(study.strong.hitRate * 100)}% directional accuracy (n=${study.strong.sample})`
+      : "Strong-move sample loading.",
+    "",
+    "LARGEST RECENT MISS",
     topMiss
-      ? `Recent divergence to inspect: ${topMiss.niftyDate}, spread ${formatPercent(topMiss.spread)}, FX ${formatPercent(topMiss.fx)}, Brent ${formatPercent(topMiss.oil)}, tech spread ${formatPercent(topMiss.techSpread)}.`
-      : "Recent divergence board is loading.",
-    "Forward scenarios: AI breadth, dollar/rupee pressure, de-dollarization, oil shocks, and India domestic catch-up are framed as if/then hypotheses, not predictions.",
+      ? `${topMiss.niftyDate}: spread ${formatPercent(topMiss.spread)} | FX ${formatPercent(topMiss.fx)} | Brent ${formatPercent(topMiss.oil)} | tech spread ${formatPercent(topMiss.techSpread)}`
+      : "Divergence board loading.",
+    "",
+    "FORWARD SCENARIOS",
+    "AI breadth, dollar/rupee pressure, de-dollarization, oil shocks, India catch-up — framed as falsifiable if/then hypotheses.",
+    "",
+    "LIMITATIONS",
+    "Associative model only. No causal claim. FX, oil, local flows, sector mix are candidate confounders, not controls.",
   ].join("\n");
 }
 
