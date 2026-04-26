@@ -1,11 +1,11 @@
 :root {
-  --bg: #08080f;
-  --surface: #111118;
-  --border: #1e1e2e;
+  --bg: #111110;
+  --surface: #1c1b18;
+  --border: rgba(255, 255, 255, 0.09);
   --nifty: #00d6a3;
   --spx: #ff654d;
-  --text: #e2e2f0;
-  --muted: #6e6e8a;
+  --text: #e8e6e0;
+  --muted: #8a8780;
   --positive: #00d6a3;
   --negative: #ff654d;
   --space-1: 4px;
@@ -21,8 +21,8 @@
   --transition: 200ms ease;
   --font: -apple-system, BlinkMacSystemFont, Inter, sans-serif;
   --mono: ui-monospace, SFMono-Regular, Menlo, monospace;
-  --page: #020303;
-  --surface-strong: rgba(16, 19, 20, 0.96);
+  --page: #0c0c0a;
+  --surface-strong: rgba(22, 21, 18, 0.96);
   --ink: #f6f7f2;
   --line: rgba(255, 255, 255, 0.12);
   --line-strong: rgba(255, 255, 255, 0.18);
