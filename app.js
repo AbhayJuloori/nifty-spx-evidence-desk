@@ -133,153 +133,203 @@ const CASE_STUDIES = [
 
 const SHOWCASE_STORIES = [
   {
-    id: "spx-follow-through",
-    caseId: "risk-on-follow",
-    title: "S&P follow-through",
-    hook: "When US risk appetite is broad, NIFTY often responds next.",
-    level: "Beginner",
-    metric: "Strong S&P hit-rate",
-    detail:
-      "The key test is simple: take the completed S&P session, then check the next NIFTY session. Strong US moves are the cleaner regime.",
+    id: 'spx-follow-through',
+    caseId: 'risk-on-follow',
+    title: 'S&P Follow-Through as a Directional Feature',
+    hook: 'Treat the prior S&P session as X. How often does it predict NIFTY direction?',
+    level: 'Introductory case',
+    metric: 'Directional hit rate (OLS + Wilson CI)',
+    detail: 'The cleanest version of the thesis: prior S&P return as a single feature in a lag-1 OLS model. Hit rate and R² tell us how much predictive signal survives to the India open.',
+    problem: 'Can the sign of the prior S&P session predict the sign of the next NIFTY session?',
+    data: 'Daily session pairs, close-to-close returns, 2-year window',
+    feature: 'X = S&P daily return, lagged 1 session — no look-ahead bias',
+    model: 'OLS: NIFTY_t = α + β·SPX_{t-1} | evaluated by directional hit rate',
+    result: 'Live from model — β, R², hit rate with 95% Wilson CI (see stat card)',
+    limitation: 'Single-feature model. FX regime, oil, sector composition, local flows uncontrolled.',
     phases: [
-      ["US signal", "The S&P finishes first, so it becomes the clean input for the next India session."],
-      ["India response", "NIFTY is rebased to 0%, so the chart compares movement, not index levels."],
-      ["Evidence", "The story becomes stronger when the S&P move is large enough to matter."],
+      ['Feature', 'S&P daily return is the input signal — lagged one session so there is no look-ahead bias.'],
+      ['Model', 'OLS regression maps the S&P feature to NIFTY. Directional hit rate measures how often sign matches.'],
+      ['Result & residual', 'Where sign matched (model correct) and where the spread opened (model error term).'],
     ],
   },
   {
-    id: "divergence-miss",
-    caseId: "model-miss",
-    title: "When India refuses the US signal",
-    hook: "The exceptions are more useful than the agreements.",
-    level: "Core quant idea",
-    metric: "NIFTY minus S&P spread",
-    detail:
-      "A divergence is where the simple rule breaks. That is where FX, oil, policy, flows, and sector mix become worth investigating.",
+    id: 'divergence-miss',
+    caseId: 'model-miss',
+    title: 'When the Single-Feature Model Breaks',
+    hook: 'Model misses are more informative than agreements — they expose omitted variables.',
+    level: 'Feature engineering',
+    metric: 'NIFTY minus S&P spread (residual size)',
+    detail: 'A divergence is a large residual. When S&P is positive but NIFTY is negative, the model is wrong. That is the prompt for investigating FX, oil, flows, and sector mix as additional features.',
+    problem: 'Why does the lag-1 S&P feature fail on certain sessions, and what omitted variables explain the miss?',
+    data: 'Daily session pairs with FX, Brent, and tech-spread covariates as candidate features',
+    feature: 'X₁ = S&P return (lagged), X₂ = USD/INR move (candidate), X₃ = Brent move (candidate)',
+    model: 'Residual analysis: large |NIFTY − fitted| → investigate candidate confounders',
+    result: 'Live — largest spread in selected window shown in Divergence Radar panel',
+    limitation: 'Exploratory, not causal. Confounder checks are correlation screens, not structural models.',
     phases: [
-      ["Signal breaks", "The S&P move points one way, but NIFTY does not cooperate."],
-      ["Spread opens", "The NIFTY-minus-S&P line shows the size of the miss."],
-      ["Investigation", "Now the chart asks why, instead of pretending one market explains everything."],
+      ['Feature', 'S&P is positive — the single feature says NIFTY should follow. It does not.'],
+      ['Model', 'The spread (residual) opens. The model miss is the data point of interest.'],
+      ['Result & residual', 'Size of the miss prompts feature investigation: FX, oil, and tech breadth as candidate confounders.'],
     ],
   },
   {
-    id: "inr-depreciation",
-    caseId: "model-miss",
-    title: "INR depreciation lens",
-    hook: "A weak rupee can change how foreign capital reads India.",
-    level: "Macro clue",
-    metric: "USD/INR vs spread",
-    detail:
-      "If USD/INR rises, the rupee weakens. That can pressure dollar returns for foreign investors even when local equities look stable.",
+    id: 'inr-depreciation',
+    caseId: 'model-miss',
+    title: 'INR Depreciation as a Confounder',
+    hook: 'A weakening rupee changes how dollar-denominated investors read India returns.',
+    level: 'Confounding variable',
+    metric: 'USD/INR move vs NIFTY-minus-S&P spread',
+    detail: 'If USD/INR rises (rupee weakens), foreign investors lose on FX translation even if local prices are flat. This creates a second explanatory variable that can flip the observed spread.',
+    problem: 'Does USD/INR move add explanatory power to NIFTY spread beyond the S&P feature alone?',
+    data: 'Daily pairs with USD/INR return aligned to the NIFTY response date',
+    feature: 'X₂ = USD/INR daily return (rupee depreciation = positive X₂)',
+    model: 'Correlation of X₂ with spread residual | FX panel shows directional association',
+    result: 'Live — FX vs spread correlation from state.study.fx (see FX Stress window)',
+    limitation: 'Correlation only. FX can be endogenous — market stress may cause both INR weakness and equity selloff.',
     phases: [
-      ["Currency move", "First check whether USD/INR moved on the NIFTY response date."],
-      ["Equity spread", "Then compare it with the NIFTY-minus-S&P spread."],
-      ["Interpretation", "Treat it as a pressure gauge, not a one-factor answer."],
+      ['Feature', 'USD/INR move on the NIFTY response date is a candidate second feature.'],
+      ['Model', 'Check whether rupee depreciation correlates with the S&P-NIFTY spread residual.'],
+      ['Result & residual', 'FX correlation tells whether adding this feature would improve the model — not whether it is causal.'],
     ],
   },
   {
-    id: "india-catch-up",
-    caseId: "nifty-outperformance",
-    title: "India catch-up",
-    hook: "NIFTY can lead when domestic momentum overpowers global beta.",
-    level: "Structural story",
-    metric: "Monthly trend + return/vol",
-    detail:
-      "If India is catching up structurally, the evidence should show up on weekly/monthly horizons, not just one exciting day.",
+    id: 'india-catch-up',
+    caseId: 'nifty-outperformance',
+    title: 'India Catch-Up as a Regime Shift',
+    hook: 'If domestic momentum dominates global beta, the residual should be persistently positive.',
+    level: 'Regime analysis',
+    metric: 'Weekly and monthly return vs volatility (risk-adjusted spread)',
+    detail: 'Structural outperformance should show up at weekly and monthly horizons, not just on one noisy day. A regime shift in intercept α is falsifiable: if India is de-coupling, rolling α should trend upward.',
+    problem: 'Is NIFTY outperformance a persistent structural shift or daily noise?',
+    data: 'Weekly and monthly session pairs, 2-year window',
+    feature: 'Horizon selection: daily vs weekly vs monthly aggregation as a hyperparameter',
+    model: 'Rolling OLS with α monitored over time | Sharpe and max-drawdown as risk-adjusted filters',
+    result: 'Live — weekly/monthly correlation and return/vol metrics in Risk Cockpit',
+    limitation: 'Short sample (2Y). Survivorship and selection bias not controlled.',
     phases: [
-      ["Local strength", "Look for NIFTY outperforming even when the S&P signal is ordinary."],
-      ["Bigger horizon", "Weekly and monthly views reduce daily noise."],
-      ["Portfolio read", "Return, volatility, and drawdown decide whether the outperformance was efficient."],
+      ['Feature', 'Aggregating to weekly or monthly reduces noise and exposes the persistent relationship better.'],
+      ['Model', 'OLS intercept α — if India is structurally outperforming, α should be positive and stable over time.'],
+      ['Result & residual', 'Risk-adjusted metrics (Sharpe, drawdown) tell whether the outperformance was efficient or just volatility.'],
     ],
   },
   {
-    id: "ai-boom",
-    caseId: "risk-on-follow",
-    title: "AI boom concentration",
-    hook: "The S&P can rally because a few AI giants are carrying it.",
-    level: "US factor lens",
-    metric: "Nasdaq 100 minus S&P",
-    detail:
-      "When Nasdaq 100 beats the S&P by a lot, the US move may be tech concentration rather than broad global risk appetite.",
+    id: 'ai-boom',
+    caseId: 'risk-on-follow',
+    title: 'AI Concentration Makes S&P a Noisy Feature',
+    hook: 'When Nasdaq 100 beats S&P by a wide margin, the S&P return is largely tech-sector signal.',
+    level: 'Feature engineering',
+    metric: 'Nasdaq 100 minus S&P 500 spread as feature quality proxy',
+    detail: 'Feature quality degrades when the feature conflates multiple regimes. If S&P gains are driven by 5 mega-cap AI names, the feature is measuring narrow US tech leadership — not broad global risk appetite.',
+    problem: 'Does tech concentration reduce the predictive validity of the S&P feature for NIFTY?',
+    data: 'Daily pairs with Nasdaq 100 return as concentration proxy',
+    feature: 'Feature quality proxy: NDX-minus-SPX spread (high = mega-cap heavy day)',
+    model: 'Stratified hit rate: compare model accuracy on high-concentration vs low-concentration days',
+    result: 'Live — tech spread for selected case shown in US Factor Lens window',
+    limitation: 'NDX-SPX is a rough breadth proxy. Sector-level decomposition would be more precise.',
     phases: [
-      ["US rally", "Start with the headline S&P move."],
-      ["Breadth check", "Compare Nasdaq 100 against the S&P to see whether tech did the heavy lifting."],
-      ["India read-through", "If the move is narrow, NIFTY may not follow one-for-one."],
+      ['Feature', 'On days where Nasdaq beats S&P widely, the S&P return is dominated by a few AI names.'],
+      ['Model', 'Stratify sessions by NDX-SPX spread. Does hit rate fall on high-concentration days?'],
+      ['Result & residual', 'Tech breadth is a feature-quality signal — it tells us when to trust the main feature less.'],
     ],
   },
   {
-    id: "tech-boom",
-    caseId: "risk-on-follow",
-    title: "Tech boom is not the same as risk-on",
-    hook: "Strong US tech does not always lift India in the same way.",
-    level: "Sector mix",
-    metric: "Tech spread",
-    detail:
-      "The S&P is not a pure global-risk instrument. Sector composition matters, especially when technology leadership is narrow.",
+    id: 'tech-boom',
+    caseId: 'risk-on-follow',
+    title: 'Sector Composition Mismatch',
+    hook: 'S&P sector weights and NIFTY sector weights differ — a tech-heavy US rally may not translate.',
+    level: 'Feature engineering',
+    metric: 'Tech spread (NDX-SPX) as sector mismatch signal',
+    detail: 'When technology and communication services dominate the move, the feature carries sector-specific signal that does not map to India sector composition.',
+    problem: 'Does sector composition of the S&P move affect how well it predicts NIFTY?',
+    data: 'Daily pairs with Nasdaq 100 as tech-weight proxy',
+    feature: 'X = S&P return, conditioned on whether the move was broad or tech-concentrated',
+    model: 'Conditional hit rate: split on |NDX-SPX| threshold, compare directional accuracy in each regime',
+    result: 'Live — tech spread shown in US Factor Lens window',
+    limitation: 'NDX is a proxy. True sector decomposition requires factor model data not used here.',
     phases: [
-      ["Tech impulse", "Watch whether Nasdaq is doing more work than the broader S&P."],
-      ["Sector mismatch", "NIFTY has a different sector mix, so the translation can be imperfect."],
-      ["Spread result", "The spread tells whether India joined the move or lagged it."],
+      ['Feature', 'Same S&P return feature, but now we flag whether the move was broad-market or sector-concentrated.'],
+      ['Model', 'Conditional accuracy: does hit rate differ between broad-rally days and tech-concentration days?'],
+      ['Result & residual', 'Sector mismatch is a feature interaction effect — the S&P feature predictive value depends on what drove it.'],
     ],
   },
   {
-    id: "oil-shock",
-    caseId: "risk-off-follow",
-    title: "Oil and geopolitical shocks",
-    hook: "India feels crude differently because the import bill matters.",
-    level: "Macro shock",
-    metric: "Brent vs spread",
-    detail:
-      "Oil spikes can pressure India through inflation and current-account worries, even when the US equity signal is mixed.",
+    id: 'oil-shock',
+    caseId: 'risk-off-follow',
+    title: 'Brent Crude as an Exogenous Confounder',
+    hook: 'India imports ~85% of its crude. An oil shock is a cost-push inflation event that affects India differently.',
+    level: 'Exogenous shock',
+    metric: 'Brent return vs NIFTY-minus-S&P spread',
+    detail: 'An oil spike can widen the spread even when the S&P signal is neutral or positive. Brent is a candidate feature for improving model performance on sessions where current-account and inflation channels dominate global beta.',
+    problem: 'Does Brent crude return add explanatory power for the NIFTY spread residual on shock sessions?',
+    data: 'Daily pairs with Brent crude return aligned to NIFTY response date',
+    feature: 'X₃ = Brent daily return (positive = oil spike = India cost-push pressure)',
+    model: 'Correlation of Brent return with spread residual | shown in oil shock panel',
+    result: 'Live — Brent vs spread correlation from state.study.oil',
+    limitation: 'Crude affects India through current account and inflation lag — daily correlation understates true transmission.',
     phases: [
-      ["Shock check", "Look for Brent moving sharply around the divergence."],
-      ["India sensitivity", "A higher import bill can weigh on sentiment and currency."],
-      ["Evidence", "Use the oil correlation and recent miss board as clues."],
+      ['Feature', 'Brent daily return on the NIFTY response date — a candidate additional feature.'],
+      ['Model', 'Does Brent return correlate with the spread residual? If yes, the model is missing an energy variable.'],
+      ['Result & residual', 'Oil correlation is a feature importance signal — it tells us whether energy deserves its own term.'],
     ],
   },
   {
-    id: "dedollarization",
-    caseId: "model-miss",
-    title: "BRICS / de-dollarization",
-    hook: "This is a regime question, not a one-day candle.",
-    level: "Scenario thinking",
-    metric: "Monthly FX regime",
-    detail:
-      "If de-dollarization matters in this relationship, it should show up as persistent currency sensitivity changing over time.",
+    id: 'dedollarization',
+    caseId: 'model-miss',
+    title: 'De-Dollarization as a Regime Hypothesis',
+    hook: 'This is a falsifiable scenario, not a chart pattern. A FX regime shift should show up in persistent USD/INR behaviour.',
+    level: 'Hypothesis / falsifiable scenario',
+    metric: 'Monthly FX regime (rolling USD/INR correlation)',
+    detail: 'A regime shift in the dollar-India relationship would manifest as structural change in the FX correlation coefficient over time. Rolling OLS with USD/INR as a covariate is the testable version of the de-dollarization narrative.',
+    problem: 'Is there evidence of a structural shift in the USD/INR-to-NIFTY-spread relationship indicating a currency regime change?',
+    data: 'Monthly returns with rolling 12-month USD/INR correlation tracked over time',
+    feature: 'X = USD/INR return, tested across rolling 12-month windows for structural break',
+    model: 'Rolling correlation of FX feature with spread residual | stationarity as falsifier',
+    result: 'Live — FX correlation from state.study.fx; rolling behaviour visible in long-range chart',
+    limitation: '2-year sample is too short to detect a true regime shift. This is a monitoring hypothesis, not a conclusion.',
     phases: [
-      ["Narrative", "The headline theme is about currency regime, not daily price noise."],
-      ["Observable", "Watch USD/INR and monthly spread behavior."],
-      ["Falsifier", "If dollar stress still explains misses, the regime shift is not visible here yet."],
+      ['Feature', 'USD/INR return as a rolling-window feature — watching for structural change over time.'],
+      ['Model', 'If the de-dollarization regime is real, rolling FX correlation with the spread should trend upward.'],
+      ['Result & residual', 'Absence of a trend is the falsifier — the hypothesis remains unconfirmed until the rolling coefficient moves.'],
     ],
   },
   {
-    id: "support-resistance",
-    caseId: "nifty-outperformance",
-    title: "Support becomes resistance",
-    hook: "Prior highs and lows can explain where the spread stalls.",
-    level: "Chart-reading layer",
-    metric: "Normalized level zones",
-    detail:
-      "Support and resistance are not predictions. They are places where participants previously reacted, so they become useful annotation zones.",
+    id: 'support-resistance',
+    caseId: 'nifty-outperformance',
+    title: 'Technical Levels as a Discrete Feature',
+    hook: 'Prior highs and lows can be modelled as threshold features — price reactions near them are non-linear.',
+    level: 'Technical overlay',
+    metric: 'Normalized spread at prior level zones',
+    detail: 'Support and resistance are places where prior market participants reacted. In a feature engineering context, proximity to a prior level is a discrete indicator that can be interacted with the main S&P feature.',
+    problem: 'Do spread dynamics change when normalised prices approach prior high or low zones?',
+    data: 'Session pairs with normalised price levels and prior-session high/low markers',
+    feature: 'Indicator: IS_NEAR_LEVEL (binary, proximity threshold)',
+    model: 'Interaction term: β₁·SPX + β₂·(SPX × IS_NEAR_LEVEL) — does level proximity alter S&P transmission?',
+    result: 'Qualitative — observe whether spread stalls or reverses at prior normalised levels',
+    limitation: 'Level selection is subjective. Confirmation bias risk: levels are easy to find in hindsight.',
     phases: [
-      ["Prior level", "Mark where a previous normalized move stalled."],
-      ["Retest", "Watch whether the line breaks through or rejects the level."],
-      ["Spread context", "Then check whether NIFTY or the S&P led the break."],
+      ['Feature', 'Mark where a prior normalised move stalled — this becomes a discrete indicator feature.'],
+      ['Model', 'Interaction term: does the S&P transmission coefficient change when price is near a prior level?'],
+      ['Result & residual', 'If the spread stalls at a known level, that is evidence the feature adds information — otherwise it is noise.'],
     ],
   },
   {
-    id: "weekly-monthly",
-    caseId: "risk-on-follow",
-    title: "Weekly/monthly trend",
-    hook: "Bigger horizons expose the relationship better than noisy daily moves.",
-    level: "Allocator lens",
-    metric: "Weekly + monthly correlation",
-    detail:
-      "Daily sessions are useful for replay, but weekly and monthly views show whether the relationship is actually changing.",
+    id: 'weekly-monthly',
+    caseId: 'risk-on-follow',
+    title: 'Horizon as a Hyperparameter',
+    hook: 'Aggregation horizon is a modelling choice — daily, weekly, monthly are different feature spaces.',
+    level: 'Portfolio horizon',
+    metric: 'Weekly and monthly correlation vs daily correlation',
+    detail: 'A portfolio manager cares about weekly or monthly predictability, not one-session noise. Treating aggregation horizon as a hyperparameter — and comparing model performance across horizons — is a standard DS validation technique.',
+    problem: 'At which aggregation horizon does the S&P feature have the strongest predictive signal for NIFTY?',
+    data: 'Daily, weekly, and monthly session pairs over 2-year window',
+    feature: 'Horizon-aggregated returns: same X (S&P lagged) and Y (NIFTY), different time bucket',
+    model: 'OLS + hit rate evaluated at each horizon | weekly and monthly correlation as evaluation metrics',
+    result: 'Live — weekly and monthly correlations from state.study.weekly and state.study.monthly',
+    limitation: 'Longer horizons have fewer observations — estimate variance is higher and CI is wider.',
     phases: [
-      ["Daily noise", "A single session can be messy and headline-driven."],
-      ["Weekly lens", "Weekly data smooths some noise while keeping timing useful."],
-      ["Monthly lens", "Monthly behavior is closer to a portfolio allocation question."],
+      ['Feature', 'Aggregate returns from daily to weekly or monthly — a feature engineering choice that affects signal-to-noise ratio.'],
+      ['Model', 'Same OLS model, different time bucket. Which horizon maximises hit rate and correlation?'],
+      ['Result & residual', 'The best horizon is a hyperparameter finding — it tells a portfolio manager which frequency the signal is most reliable at.'],
     ],
   },
 ];
@@ -423,6 +473,7 @@ const els = {
   liveHitRateStat: document.querySelector("#liveHitRateStat"),
   liveBetaStat: document.querySelector("#liveBetaStat"),
   liveRSquaredStat: document.querySelector("#liveRSquaredStat"),
+  dsStatCard: document.querySelector("#dsStatCard"),
   insightPanel: document.querySelector("#insightPanel"),
   thesisPanel: document.querySelector("#thesisPanel"),
   evidenceTable: document.querySelector("#evidenceTable"),
@@ -1228,6 +1279,17 @@ function renderDifference(chart) {
   });
 }
 
+function wilsonIntervalPublic(hits, n) {
+  if (!n || !Number.isFinite(hits) || !Number.isFinite(n)) return { lower: NaN, upper: NaN };
+  const z = 1.959963984540054;
+  const p = hits / n;
+  const z2 = z * z;
+  const denom = 1 + z2 / n;
+  const center = (p + z2 / (2 * n)) / denom;
+  const margin = (z / denom) * Math.sqrt((p * (1 - p) + z2 / (4 * n)) / n);
+  return { lower: Math.max(0, center - margin), upper: Math.min(1, center + margin) };
+}
+
 function standardDeviation(values) {
   const clean = values.filter(Number.isFinite);
   if (clean.length < 2) return null;
@@ -1583,7 +1645,52 @@ function formatCorrelation(value) {
   return `${sign}${value.toFixed(2)}`;
 }
 
+function renderDsStatCard() {
+  if (!els.dsStatCard) return;
+  const study = state.study;
+  const ols = study?.ols;
+  const granger = study?.granger;
+  const recent = study?.recent;
+  const fmt2 = (v) => (Number.isFinite(v) ? v.toFixed(2) : '--');
+  const fmt4 = (v) => (Number.isFinite(v) ? v.toFixed(4) : '--');
+  const fmtPct = (v) => (Number.isFinite(v) ? (v * 100).toFixed(0) + '%' : '--');
+  const n = recent?.sample ?? '--';
+  const hitRate = fmtPct(recent?.hitRate);
+  let hitCi = '';
+  if (recent && Number.isFinite(recent.hitRate) && recent.sample) {
+    const hits = Math.round(recent.hitRate * recent.sample);
+    const ci = wilsonIntervalPublic(hits, recent.sample);
+    if (Number.isFinite(ci.lower)) hitCi = ' [' + fmtPct(ci.lower) + '–' + fmtPct(ci.upper) + ']';
+  }
+  const grangerSig = granger?.significant ? '✓ significant' : (Number.isFinite(granger?.pValue) ? 'not significant' : '--');
+  // safe: escapeHTML used on all dynamic values
+  els.dsStatCard.innerHTML =
+    '<div class="ds-card-primary">' +
+    '<div class="ds-card-row"><span class="ds-label">Model</span><span class="ds-value">OLS — NIFTY<sub>t</sub> = α + β·SPX<sub>t−1</sub></span></div>' +
+    '<div class="ds-card-row">' +
+    '<span class="ds-label">β</span><span class="ds-value ds-accent">' + escapeHTML(fmt2(ols?.beta)) + '</span>' +
+    '<span class="ds-label">R²</span><span class="ds-value ds-accent">' + escapeHTML(fmt2(ols?.rSquared)) + '</span>' +
+    '<span class="ds-label">α</span><span class="ds-value">' + escapeHTML(fmt4(ols?.alpha)) + '</span>' +
+    '</div>' +
+    '<div class="ds-card-row">' +
+    '<span class="ds-label">Hit rate</span><span class="ds-value ds-accent">' + escapeHTML(hitRate + hitCi) + '</span>' +
+    '<span class="ds-label">n</span><span class="ds-value">' + escapeHTML(String(n)) + '</span>' +
+    '</div>' +
+    '<div class="ds-card-row">' +
+    '<span class="ds-label">Granger F</span><span class="ds-value">' + escapeHTML(fmt2(granger?.fStat)) + '</span>' +
+    '<span class="ds-label">p</span><span class="ds-value' + (granger?.significant ? ' ds-sig' : '') + '">' + escapeHTML(fmt4(granger?.pValue) + ' ' + grangerSig) + '</span>' +
+    '</div>' +
+    '</div>' +
+    '<details class="ds-card-secondary">' +
+    '<summary>Show methodology</summary>' +
+    '<div class="ds-card-row"><span class="ds-label">Data</span><span class="ds-value">Daily session pairs, close-to-close returns, 2Y window</span></div>' +
+    '<div class="ds-card-row"><span class="ds-label">Feature</span><span class="ds-value">X = S&amp;P return, lagged 1 session (no look-ahead)</span></div>' +
+    '<div class="ds-card-row"><span class="ds-label">Limitation</span><span class="ds-value">Associative only. FX, oil, local flows, sector mix uncontrolled.</span></div>' +
+    '</details>';
+}
+
 function renderInsights() {
+  renderDsStatCard();
   const pairs = pairedSeries();
   const gap = (lastValue("nifty") ?? NaN) - (lastValue("spx") ?? NaN);
   const deviations = differenceData();
@@ -1941,23 +2048,27 @@ function storyTakeawayMarkup(story, selected, spread) {
   const spreadText =
     Number.isFinite(spread) && Math.abs(spread) >= 0.01
       ? spread > 0
-        ? `India outran the US move by ${formatPercent(spread)}.`
-        : `India lagged the US move by ${formatPercent(Math.abs(spread))}.`
-      : "India and the US finished almost even on this comparison.";
-  const question = storyQuestion(story?.id);
+        ? 'NIFTY outran the S&P feature by ' + formatPercent(spread) + ' — positive residual.'
+        : 'NIFTY lagged the S&P feature by ' + formatPercent(Math.abs(spread)) + ' — negative residual.'
+      : 'NIFTY and S&P finished nearly even — residual close to zero.';
   const observation = selected
-    ? `${formatDateLabel(selected.spxDate)} -> ${formatDateLabel(selected.niftyDate)}`
-    : "Use any completed US session";
-  return `<div class="takeaway-block">
-      <span>Observation</span>
-      <strong>${observation}</strong>
-      <small>${spreadText}</small>
-    </div>
-    <div class="takeaway-block">
-      <span>Why it matters</span>
-      <strong>${story?.hook || "Look for where the two markets rhyme and where they do not."}</strong>
-      <small>${question}</small>
-    </div>`;
+    ? formatDateLabel(selected.spxDate) + ' → ' + formatDateLabel(selected.niftyDate)
+    : 'Use any completed US session';
+  if (!story) {
+    return '<div class="takeaway-block"><span>Observation</span><strong>' + escapeHTML(observation) + '</strong><small>' + escapeHTML(spreadText) + '</small></div>';
+  }
+  return '<div class="takeaway-block"><span>Observation</span><strong>' + escapeHTML(observation) + '</strong><small>' + escapeHTML(spreadText) + '</small></div>' +
+    '<div class="ds-case-card">' +
+    '<div class="ds-case-row"><span class="ds-case-label">Problem</span><span class="ds-case-body">' + escapeHTML(story.problem || '') + '</span></div>' +
+    '<div class="ds-case-row"><span class="ds-case-label">Model</span><span class="ds-case-body">' + escapeHTML(story.model || '') + '</span></div>' +
+    '<div class="ds-case-row ds-case-result"><span class="ds-case-label">Result</span><span class="ds-case-body">' + escapeHTML(story.result || '') + '</span></div>' +
+    '<details class="ds-case-more">' +
+    '<summary>Data · Feature · Limitation</summary>' +
+    '<div class="ds-case-row"><span class="ds-case-label">Data</span><span class="ds-case-body">' + escapeHTML(story.data || '') + '</span></div>' +
+    '<div class="ds-case-row"><span class="ds-case-label">Feature</span><span class="ds-case-body">' + escapeHTML(story.feature || '') + '</span></div>' +
+    '<div class="ds-case-row ds-case-limitation"><span class="ds-case-label">Limitation</span><span class="ds-case-body">' + escapeHTML(story.limitation || '') + '</span></div>' +
+    '</details>' +
+    '</div>';
 }
 
 function storyQuestion(storyId) {
