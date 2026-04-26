@@ -314,6 +314,7 @@ const state = {
   storyTimeouts: [],
   storyTypeTimer: null,
   storySequenceToken: 0,
+  storySequenceRunning: false,
   pageEntranceTimer: null,
   animation: { booted: false, rafs: [] },
 };
@@ -1766,24 +1767,28 @@ function renderStoryTheatre() {
       : phaseItems.at(-1)?.narration || ""
     : "Loading the selected market session.";
   els.storyTakeaway.innerHTML = storyTakeawayMarkup(story, selected, spread);
-  els.storySteps.innerHTML = phaseItems
-    .map(
-      (item, index) =>
-        `<div class="story-step" data-story-step="${index}">
-          <b>${String(index + 1).padStart(2, "0")}</b>
-          <span>${item.label}</span>
-          <strong>${item.value}</strong>
-          <small>${item.narration}</small>
-        </div>`,
-    )
-    .join("");
+  if (!state.storySequenceRunning) {
+    els.storySteps.innerHTML = phaseItems
+      .map(
+        (item, index) =>
+          `<div class="story-step" data-story-step="${index}">
+            <b>${String(index + 1).padStart(2, "0")}</b>
+            <span>${item.label}</span>
+            <strong>${item.value}</strong>
+            <small>${item.narration}</small>
+          </div>`,
+      )
+      .join("");
+  }
   els.storyPhase.textContent = story ? story.level : selected ? selected.title : "Custom";
   els.storyMetric.textContent = selected
     ? `${formatPercent(spxReturn)} S&P -> ${formatPercent(niftyReturn)} NIFTY`
     : "Interactive relationship sequence";
 
-  stopStorySequence();
-  updateStoryPaths(spxReturn, niftyReturn, spread);
+  if (!state.storySequenceRunning) {
+    stopStorySequence();
+    updateStoryPaths(spxReturn, niftyReturn, spread);
+  }
   if (!storyReady) {
     setStoryVisualMode("pending");
     setStoryVisualState(0);
@@ -1793,7 +1798,7 @@ function renderStoryTheatre() {
     runStorySequence(phaseItems);
     state.lastStoryAnimationKey = animationKey;
     state.forceStoryAnimation = false;
-  } else {
+  } else if (!state.storySequenceRunning) {
     setStoryVisualMode("settled");
     finishStorySequence(phaseItems);
   }
@@ -1869,6 +1874,7 @@ function storyY(value) {
 
 function runStorySequence(phaseItems) {
   stopStorySequence();
+  state.storySequenceRunning = true;
   setStoryVisualMode("sequencing");
   const token = ++state.storySequenceToken;
   const phaseDuration = prefersReducedMotion() || compactStoryLayout() ? 0 : 1600;
@@ -1901,6 +1907,7 @@ function setStoryNarration(text) {
 }
 
 function finishStorySequence(phaseItems) {
+  state.storySequenceRunning = false;
   stopStorySequence();
   setStoryVisualMode("settled");
   setStoryVisualState(3);
