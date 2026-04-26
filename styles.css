@@ -2807,3 +2807,12 @@ body[data-page="home"] .market-strip {
 .ds-card-secondary { margin-top: 10px; border-top: 1px solid rgba(255,255,255,0.08); padding-top: 10px; }
 .ds-card-secondary summary { cursor: pointer; color: rgba(255,255,255,0.4); font-size: 0.72rem; letter-spacing: 0.04em; user-select: none; }
 .ds-card-secondary[open] summary { margin-bottom: 8px; }
+
+/* Macro Explainer */
+.macro-explainer { padding: 48px 32px 32px; max-width: 1100px; margin: 0 auto; }
+.macro-explainer-copy { margin-bottom: 28px; }
+.macro-explainer-copy h2 { margin: 4px 0 8px; }
+.macro-explainer-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; }
+.macro-ex-card { background: rgba(255,245,230,0.04); border: 1px solid rgba(255,255,255,0.08); border-top: 3px solid var(--color-nifty, #00d6a3); border-radius: 0 0 8px 8px; padding: 14px 16px; display: flex; flex-direction: column; gap: 6px; }
+.macro-ex-card strong { color: #e8e6e0; font-size: 0.85rem; }
+.macro-ex-card span { color: rgba(255,255,255,0.5); font-size: 0.78rem; line-height: 1.45; }
