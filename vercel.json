@@ -1,5 +1,14 @@
 {
   "version": 2,
+  "builds": [
+    { "src": "api/chart.js", "use": "@vercel/node" },
+    { "src": "index.html", "use": "@vercel/static" },
+    { "src": "app.js", "use": "@vercel/static" },
+    { "src": "styles.css", "use": "@vercel/static" },
+    { "src": "lightweight-charts.standalone.production.js", "use": "@vercel/static" },
+    { "src": "modules/**", "use": "@vercel/static" },
+    { "src": "assets/**", "use": "@vercel/static" }
+  ],
   "routes": [
     { "src": "/api/chart", "dest": "/api/chart.js" },
     { "handle": "filesystem" },
