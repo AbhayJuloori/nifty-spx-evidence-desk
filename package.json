@@ -1,0 +1,25 @@
+{
+  "name": "nifty-spx-evidence-desk",
+  "version": "1.0.0",
+  "description": "Interactive percent-growth research desk comparing NIFTY 50 and S&P 500 with statistical analysis",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "test": "node --test modules/stats.test.js"
+  },
+  "keywords": [
+    "finance",
+    "data-science",
+    "nifty",
+    "sp500",
+    "statistics",
+    "time-series",
+    "trading"
+  ],
+  "author": "Abhay Juloori",
+  "license": "MIT",
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {}
+}

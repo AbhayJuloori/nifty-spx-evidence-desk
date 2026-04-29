@@ -2816,3 +2816,7 @@ body[data-page="home"] .market-strip {
 .macro-ex-card { background: rgba(255,245,230,0.04); border: 1px solid rgba(255,255,255,0.08); border-top: 3px solid var(--color-nifty, #00d6a3); border-radius: 0 0 8px 8px; padding: 14px 16px; display: flex; flex-direction: column; gap: 6px; }
 .macro-ex-card strong { color: #e8e6e0; font-size: 0.85rem; }
 .macro-ex-card span { color: rgba(255,255,255,0.5); font-size: 0.78rem; line-height: 1.45; }
+
+/* GitHub nav link */
+.nav-github { display: flex; align-items: center; color: rgba(255,255,255,0.4); transition: color 0.2s; margin-left: 0.75rem; text-decoration: none; flex-shrink: 0; }
+.nav-github:hover { color: rgba(255,255,255,0.9); }

@@ -1,0 +1,25 @@
+node_modules/
+
+# dev iteration screenshots — excluded from repo
+# (keep nifty-spx-chart.png and ss-main-v2.png for README)
+v[0-9]*.png
+fix-*.png
+final-*.png
+loop-*.png
+qa-*.png
+redesign-*.png
+ref-*.png
+nav-*.png
+session-*.png
+icon-check.png
+ss-main.png
+ss-v2.png
+nifty-spx-mobile.png
+
+# internal tooling docs
+docs/superpowers/
+
+.DS_Store
+*.log
+.env
+organize_personal_files.py
