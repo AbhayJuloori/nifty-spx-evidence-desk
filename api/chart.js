@@ -4,7 +4,7 @@ const isSafeRange = v => /^(1d|5d|1mo|3mo|6mo|ytd|1y|2y|3y|5y|10y|max)$/.test(v)
 const isSafeInterval = v => /^(1m|2m|5m|15m|30m|60m|90m|1h|1d|5d|1wk|1mo|3mo)$/.test(v);
 const isSafePeriod = v => /^\d{9,11}$/.test(v);
 
-export default async function handler(req, res) {
+module.exports = async function handler(req, res) {
   const url = new URL(req.url, 'http://localhost');
   const symbolKey = url.searchParams.get('symbol');
   const range = url.searchParams.get('range') || '1y';
@@ -52,4 +52,4 @@ export default async function handler(req, res) {
   } catch (err) {
     res.status(502).json({ error: 'Unable to reach chart provider', details: err.message });
   }
-}
+};

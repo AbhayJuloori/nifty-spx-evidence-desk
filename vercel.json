@@ -1,7 +1,6 @@
 {
   "version": 2,
-  "routes": [
-    { "src": "/api/chart", "dest": "/api/chart.js" },
-    { "src": "/(.*)", "dest": "/$1" }
+  "rewrites": [
+    { "source": "/api/chart", "destination": "/api/chart.js" }
   ]
 }
