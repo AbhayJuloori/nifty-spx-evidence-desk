@@ -15,6 +15,7 @@ const SYMBOLS = {
   brent: "BZ=F",
   ndx: "^NDX",
 };
+const YAHOO_HOSTS = ["query1.finance.yahoo.com", "query2.finance.yahoo.com"];
 
 const MIME_TYPES = {
   ".html": "text/html; charset=utf-8",
@@ -31,6 +32,9 @@ function send(res, status, body, contentType = "text/plain; charset=utf-8") {
   res.writeHead(status, {
     "content-type": contentType,
     "cache-control": "no-store",
+    "access-control-allow-origin": "*",
+    "access-control-allow-methods": "GET, OPTIONS",
+    "access-control-allow-headers": "Content-Type",
   });
   res.end(body);
 }
@@ -48,6 +52,11 @@ function isSafePeriod(value) {
 }
 
 async function proxyChart(req, res) {
+  if (req.method === "OPTIONS") {
+    send(res, 204, "");
+    return;
+  }
+
   const requestUrl = new URL(req.url, `http://${req.headers.host}`);
   const symbolKey = requestUrl.searchParams.get("symbol");
   const range = requestUrl.searchParams.get("range") || "1y";
@@ -75,37 +84,56 @@ async function proxyChart(req, res) {
     return;
   }
 
-  const yahooUrl = new URL(`https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}`);
-  if (hasPeriod) {
-    yahooUrl.searchParams.set("period1", period1);
-    yahooUrl.searchParams.set("period2", period2);
-  } else {
-    yahooUrl.searchParams.set("range", range);
-  }
-  yahooUrl.searchParams.set("interval", interval);
+  const buildYahooUrl = (host) => {
+    const yahooUrl = new URL(`https://${host}/v8/finance/chart/${encodeURIComponent(symbol)}`);
+    if (hasPeriod) {
+      yahooUrl.searchParams.set("period1", period1);
+      yahooUrl.searchParams.set("period2", period2);
+    } else {
+      yahooUrl.searchParams.set("range", range);
+    }
+    yahooUrl.searchParams.set("interval", interval);
+    return yahooUrl;
+  };
 
   try {
-    const { stdout } = await execFileAsync(
-      "curl",
-      [
-        "-sL",
-        "--max-time",
-        "12",
-        "-A",
-        "Mozilla/5.0",
-        "-H",
-        "accept: application/json",
-        "-w",
-        "\n__HTTP_STATUS__:%{http_code}",
-        yahooUrl.toString(),
-      ],
-      { maxBuffer: 12 * 1024 * 1024 },
-    );
+    let stdout = "";
+    let status = 502;
+
+    for (const host of YAHOO_HOSTS) {
+      try {
+        const result = await execFileAsync(
+          "curl",
+          [
+            "-sL",
+            "--max-time",
+            "12",
+            "-A",
+            "Mozilla/5.0",
+            "-H",
+            "accept: application/json",
+            "-H",
+            "accept-language: en-US,en;q=0.9",
+            "-w",
+            "\n__HTTP_STATUS__:%{http_code}",
+            buildYahooUrl(host).toString(),
+          ],
+          { maxBuffer: 12 * 1024 * 1024 },
+        );
+        stdout = result.stdout;
+
+        const marker = "\n__HTTP_STATUS__:";
+        const markerIndex = stdout.lastIndexOf(marker);
+        status = markerIndex >= 0 ? Number(stdout.slice(markerIndex + marker.length)) : 200;
+        if ((status >= 200 && status < 300) || host === YAHOO_HOSTS.at(-1)) break;
+      } catch (error) {
+        if (host === YAHOO_HOSTS.at(-1)) throw error;
+      }
+    }
 
     const marker = "\n__HTTP_STATUS__:";
     const markerIndex = stdout.lastIndexOf(marker);
     const body = markerIndex >= 0 ? stdout.slice(0, markerIndex) : stdout;
-    const status = markerIndex >= 0 ? Number(stdout.slice(markerIndex + marker.length)) : 200;
     send(res, status >= 200 && status < 600 ? status : 502, body, "application/json; charset=utf-8");
   } catch (error) {
     send(

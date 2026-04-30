@@ -1865,6 +1865,29 @@ body[data-page="home"] .chart-area {
   display: grid;
   grid-template-rows: 1fr;
   background: #0f1210;
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.chart-area.is-loading {
+  place-items: center;
+}
+
+.chart-loading {
+  min-height: 420px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  color: var(--muted);
+}
+
+.chart-spinner {
+  width: 26px;
+  height: 26px;
+  border: 2px solid rgba(255, 255, 255, 0.12);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
 }
 
 .live-stats-strip {
@@ -1915,12 +1938,17 @@ body[data-page="home"] .chart-area {
 .replay-controls {
   min-height: 58px;
   display: grid;
-  grid-template-columns: auto minmax(180px, 1fr) minmax(220px, auto);
+  grid-template-columns: 38px 70px 38px auto minmax(180px, 1fr) minmax(220px, auto);
   gap: 8px;
   align-items: center;
   padding: 10px 14px;
   border-top: 1px solid var(--line);
   background: rgba(17, 20, 18, 0.92);
+}
+
+.replay-controls button {
+  min-height: 36px;
+  padding: 0 10px;
 }
 
 .replay-controls label {
@@ -2422,6 +2450,12 @@ body[data-page="home"] .chart-area {
 @keyframes scanline {
   to {
     transform: translateY(100%);
+  }
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
   }
 }
 
