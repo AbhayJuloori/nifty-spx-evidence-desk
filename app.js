@@ -13,6 +13,10 @@ const RANGE_CONFIG = {
   MAX: { fetchRange: "max", autoInterval: "1mo" },
 };
 
+function escapeHTML(s) {
+  return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
 const SYMBOLS = {
   nifty: {
     label: "NIFTY 50",
@@ -349,6 +353,7 @@ const state = {
   ma50: false,
   data: {},
   study: null,
+  studyError: null,
   charts: [],
   activeSeries: [],
   primarySeries: {},
@@ -533,6 +538,12 @@ function formatDateLabel(dateISO) {
 function setStatus(message, isError = false) {
   els.status.textContent = message;
   els.status.classList.toggle("error", isError);
+}
+
+function showChartLoading(message) {
+  clearCharts();
+  els.chartArea.classList.add("is-loading");
+  els.chartArea.innerHTML = `<div class="chart-loading" aria-live="polite"><span class="chart-spinner" aria-hidden="true"></span><span>${escapeHTML(message)}</span></div>`;
 }
 
 function defaultSessionDate() {
@@ -987,7 +998,9 @@ async function loadData() {
 async function loadRangeData(requestId) {
   const config = RANGE_CONFIG[state.range];
   const interval = requestedInterval();
-  setStatus(`Loading ${state.range} data at ${interval} granularity...`);
+  const loadingMessage = `Loading ${state.range} data at ${interval} granularity...`;
+  setStatus(loadingMessage);
+  showChartLoading(loadingMessage);
 
   const [nifty, spx] = await Promise.all([
     fetchSymbol("nifty", { range: config.fetchRange, interval }),
@@ -1014,7 +1027,9 @@ async function loadSessionData(requestId) {
   const leadLabel = selectedCase
     ? `${formatDateLabel(spxDate)} S&P into ${formatDateLabel(state.sessionDate)} NIFTY`
     : `${formatDateLabel(state.sessionDate)} sessions`;
-  setStatus(`Loading ${leadLabel} at ${interval} granularity...`);
+  const loadingMessage = `Loading ${leadLabel} at ${interval} granularity...`;
+  setStatus(loadingMessage);
+  showChartLoading(loadingMessage);
 
   const [niftyRaw, spxRaw] = await Promise.all([
     fetchSymbol("nifty", { period1: niftyWindow.period1, period2: niftyWindow.period2, interval }),
@@ -1709,7 +1724,7 @@ function renderInsights() {
   const study = state.study;
   const leadLagText = study
     ? `${formatCorrelation(study.recent.correlation)} corr, ${Math.round(study.recent.hitRate * 100)}% same direction`
-    : "Loading...";
+    : state.studyError ? "Unavailable" : "Loading...";
   const selectedPair = study?.selected
     ? `${study.selected.spxDate} S&P ${formatPercent(study.selected.spxReturn)} -> ${study.selected.niftyDate || "next NIFTY"} ${formatPercent(
         study.selected.niftyReturn,
@@ -2148,7 +2163,7 @@ function renderLagSweep() {
   if (!els.lagSweep) return;
   const rows = state.study?.lagSweep || [];
   if (!rows.length) {
-    els.lagSweep.innerHTML = `<div class="table-empty">Loading lag sweep...</div>`;
+    els.lagSweep.innerHTML = `<div class="table-empty">${state.studyError ? "Lag sweep unavailable." : "Loading lag sweep..."}</div>`;
     return;
   }
 
@@ -2178,7 +2193,7 @@ function renderRiskCockpit() {
   if (!els.riskCockpit) return;
   const risk = state.study?.risk;
   if (!risk) {
-    els.riskCockpit.innerHTML = `<div class="table-empty">Loading risk cockpit...</div>`;
+    els.riskCockpit.innerHTML = `<div class="table-empty">${state.studyError ? "Risk cockpit unavailable." : "Loading risk cockpit..."}</div>`;
     return;
   }
 
@@ -2225,7 +2240,7 @@ function renderContextStories() {
   if (!els.contextStories) return;
   const rows = state.study?.contextRows || [];
   if (!rows.length) {
-    els.contextStories.innerHTML = `<div class="table-empty">Loading divergence board...</div>`;
+    els.contextStories.innerHTML = `<div class="table-empty">${state.studyError ? "Divergence board unavailable." : "Loading divergence board..."}</div>`;
     return;
   }
 
@@ -2400,11 +2415,11 @@ function renderThesisPanel() {
         ["6", "Event exceptions", "Replay selected cases to show where the simple relationship breaks"],
       ]
     : [
-        ["1", "Recent tendency", "Loading sample"],
-        ["2", "Strong-move filter", "Loading sample"],
-        ["3", "Weekly / monthly lens", "Loading sample"],
-        ["4", "FX stress check", "Loading USD/INR sample"],
-        ["5", "Tech / oil context", "Loading macro sample"],
+        ["1", "Recent tendency", state.studyError ? "Sample unavailable" : "Loading sample"],
+        ["2", "Strong-move filter", state.studyError ? "Sample unavailable" : "Loading sample"],
+        ["3", "Weekly / monthly lens", state.studyError ? "Sample unavailable" : "Loading sample"],
+        ["4", "FX stress check", state.studyError ? "USD/INR sample unavailable" : "Loading USD/INR sample"],
+        ["5", "Tech / oil context", state.studyError ? "Macro sample unavailable" : "Loading macro sample"],
         ["6", "Event exceptions", "Replay selected cases"],
       ];
 
@@ -2436,7 +2451,7 @@ function renderThesisPanel() {
 
 function renderEvidenceTable() {
   if (!state.study) {
-    els.evidenceTable.innerHTML = `<div class="table-empty">Loading evidence sample...</div>`;
+    els.evidenceTable.innerHTML = `<div class="table-empty">${state.studyError ? "Evidence sample unavailable." : "Loading evidence sample..."}</div>`;
     return;
   }
 
@@ -2537,6 +2552,7 @@ function periodBucket(dateISO, bucketType) {
 
 async function loadLeadLagStudy() {
   const studyRequestId = ++state.studyRequestId;
+  state.studyError = null;
   try {
     const [niftyBars, spxBars, niftyWeekly, spxWeekly, niftyMonthly, spxMonthly, usdInrBars, brentBars, ndxBars] = await Promise.all([
       fetchSymbol("nifty", { range: "2y", interval: "1d" }),
@@ -2641,10 +2657,13 @@ async function loadLeadLagStudy() {
           }
         : null,
     };
+    state.studyError = null;
     renderInsights();
-  } catch {
+  } catch (error) {
     if (studyRequestId !== state.studyRequestId) return;
+    console.error("Unable to load lead-lag study", error);
     state.study = null;
+    state.studyError = error.message || "Supplemental study unavailable";
     renderInsights();
   }
 }
