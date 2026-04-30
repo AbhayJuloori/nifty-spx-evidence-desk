@@ -1,11 +1,12 @@
 # NIFTY 50 / S&P 500 Evidence Desk
 
-**A browser-native market research desk for testing whether U.S. equity moves show up in the next India session.**
+**[Live Demo](https://nifty-spx-evidence-desk.vercel.app)** — A browser-native market research desk for testing whether U.S. equity moves show up in the next India session.
 
 The NIFTY 50 / S&P 500 Evidence Desk is an interactive data-science portfolio project that compares Indian and U.S. equity-market behavior through live percent-growth charts, lead-lag studies, regression diagnostics, macro context, and risk analytics. It is built to answer a practical question with evidence instead of intuition: when the S&P 500 moves, how much of that signal appears in NIFTY, under which horizons, and with what caveats? What makes the project different is the combination of polished market-terminal UI, transparent statistical methodology, and a zero-build vanilla JavaScript architecture that runs locally with a single Node command.
 
 ![Screenshot](./nifty-spx-chart.png)
 
+[![Live on Vercel](https://img.shields.io/badge/Live-Vercel-black?logo=vercel)](https://nifty-spx-evidence-desk.vercel.app)
 ![JavaScript](https://img.shields.io/badge/JavaScript-ES2022-yellow)
 ![Node.js](https://img.shields.io/badge/Node.js-≥18-339933)
 ![CSS3](https://img.shields.io/badge/CSS3-Custom%20Properties-1572B6)
