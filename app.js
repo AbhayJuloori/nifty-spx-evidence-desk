@@ -188,7 +188,7 @@ const SHOWCASE_STORIES = [
     data: 'Daily pairs with USD/INR return aligned to the NIFTY response date',
     feature: 'X₂ = USD/INR daily return (rupee depreciation = positive X₂)',
     model: 'Correlation of X₂ with spread residual | FX panel shows directional association',
-    result: 'Live — FX vs spread correlation from state.study.fx (see FX Stress window)',
+    result: 'USD/INR moves correlated with index spread — see Macro Notebook FX lens for current values.',
     limitation: 'Correlation only. FX can be endogenous — market stress may cause both INR weakness and equity selloff.',
     phases: [
       ['Feature', 'USD/INR move on the NIFTY response date is a candidate second feature.'],
@@ -228,7 +228,7 @@ const SHOWCASE_STORIES = [
     data: 'Daily pairs with Nasdaq 100 return as concentration proxy',
     feature: 'Feature quality proxy: NDX-minus-SPX spread (high = mega-cap heavy day)',
     model: 'Stratified hit rate: compare model accuracy on high-concentration vs low-concentration days',
-    result: 'Live — tech spread for selected case shown in US Factor Lens window',
+    result: 'Nasdaq vs S&P spread shown in US Factor Lens — see Macro Notebook for live comparison.',
     limitation: 'NDX-SPX is a rough breadth proxy. Sector-level decomposition would be more precise.',
     phases: [
       ['Feature', 'On days where Nasdaq beats S&P widely, the S&P return is dominated by a few AI names.'],
@@ -268,7 +268,7 @@ const SHOWCASE_STORIES = [
     data: 'Daily pairs with Brent crude return aligned to NIFTY response date',
     feature: 'X₃ = Brent daily return (positive = oil spike = India cost-push pressure)',
     model: 'Correlation of Brent return with spread residual | shown in oil shock panel',
-    result: 'Live — Brent vs spread correlation from state.study.oil',
+    result: 'Correlation between Brent crude moves and NIFTY/S&P spread — see Macro Notebook for live values.',
     limitation: 'Crude affects India through current account and inflation lag — daily correlation understates true transmission.',
     phases: [
       ['Feature', 'Brent daily return on the NIFTY response date — a candidate additional feature.'],
@@ -328,7 +328,7 @@ const SHOWCASE_STORIES = [
     data: 'Daily, weekly, and monthly session pairs over 2-year window',
     feature: 'Horizon-aggregated returns: same X (S&P lagged) and Y (NIFTY), different time bucket',
     model: 'OLS + hit rate evaluated at each horizon | weekly and monthly correlation as evaluation metrics',
-    result: 'Live — weekly and monthly correlations from state.study.weekly and state.study.monthly',
+    result: 'Rolling Pearson correlation across weekly and monthly horizons — computed in Deep Dive panel.',
     limitation: 'Longer horizons have fewer observations — estimate variance is higher and CI is wider.',
     phases: [
       ['Feature', 'Aggregate returns from daily to weekly or monthly — a feature engineering choice that affects signal-to-noise ratio.'],
@@ -761,7 +761,9 @@ function syncControls() {
   updateRangeButtonState();
 
   const sessionMode = state.mode === "session";
-  els.rangeGroup.classList.toggle("hidden", sessionMode);
+  els.rangeGroup.classList.toggle("ctrl-disabled", sessionMode);
+  if (sessionMode) els.rangeGroup.setAttribute("title", "Duration controls are not available in session replay mode");
+  else els.rangeGroup.removeAttribute("title");
   els.dateGroup.classList.toggle("hidden", !sessionMode);
   els.alignGroup.classList.toggle("hidden", !sessionMode);
   els.mode.disabled = Boolean(selectedCase);
@@ -1326,7 +1328,7 @@ function renderCharts(fitContent) {
   clearCharts();
 
   if (state.chartView === "split") {
-    els.workspaceLabel.textContent = "Split lens";
+    els.workspaceLabel.textContent = "Split view";
     els.chartArea.classList.add("split");
     const niftyChart = createChart(makePane("NIFTY 50 percent performance"));
     const spxChart = createChart(makePane("S&P 500 percent performance"));
@@ -1336,10 +1338,10 @@ function renderCharts(fitContent) {
   } else {
     const chart = createChart(makePane("NIFTY 50 and S&P 500 percent performance overlay"));
     if (state.chartView === "difference") {
-      els.workspaceLabel.textContent = "Deviation lens";
+      els.workspaceLabel.textContent = "Difference view";
       renderDifference(chart);
     } else {
-      els.workspaceLabel.textContent = state.mode === "session" ? "Session replay lens" : "Overlay lens";
+      els.workspaceLabel.textContent = state.mode === "session" ? "Session replay" : "Overlay view";
       addPercentSeries(chart, "nifty");
       addPercentSeries(chart, "spx", state.chartType === "candles");
     }
@@ -2320,7 +2322,7 @@ function renderFutureScenarios() {
   els.futureScenarios.innerHTML = scenarios
     .map(
       (item, index) => `<details class="future-card scorecard-enter" ${index < 2 ? "open" : ""}>
-        <summary><span>${item.tag}</span><strong>${item.title}</strong></summary>
+        <summary>${item.tag ? `<span>${escapeHTML(item.tag)}</span>` : ''}<strong>${escapeHTML(item.title || 'Scenario')}</strong></summary>
         <div class="scenario-grid">
           <p><b>If / then</b>${item.then}</p>
           <p><b>What to watch</b>${item.watch}</p>
@@ -2713,7 +2715,13 @@ function wireControls() {
 
   els.tourButton.addEventListener("click", toggleNarratedTour);
   els.copySummaryButton.addEventListener("click", copyThesisSummary);
-  els.printButton.addEventListener("click", () => window.print());
+  els.printButton.addEventListener("click", () => {
+    els.printButton.textContent = "Preparing print\u2026";
+    window.setTimeout(() => {
+      window.print();
+      els.printButton.textContent = "Print view";
+    }, 300);
+  });
 
   els.mode.addEventListener("change", () => {
     state.caseId = "custom";
@@ -2884,7 +2892,7 @@ async function copyThesisSummary() {
   const text = buildThesisSummary();
   try {
     await navigator.clipboard.writeText(text);
-    els.copySummaryButton.textContent = "Copied";
+    els.copySummaryButton.textContent = "Copied thesis summary ✓";
   } catch {
     const textarea = document.createElement("textarea");
     textarea.value = text;
@@ -2892,7 +2900,7 @@ async function copyThesisSummary() {
     textarea.select();
     document.execCommand("copy");
     textarea.remove();
-    els.copySummaryButton.textContent = "Copied";
+    els.copySummaryButton.textContent = "Copied thesis summary ✓";
   }
   window.setTimeout(() => {
     els.copySummaryButton.textContent = "Copy thesis";
@@ -2948,15 +2956,25 @@ function toggleNarratedTour() {
     state.tourTimer = null;
     state.tourReplayTimeout = null;
     els.tourButton.textContent = "Start narrated tour";
+    const ts = document.getElementById("tourStep");
+    if (ts) ts.remove();
     return;
   }
 
   let index = Math.max(0, CASE_STUDIES.findIndex((item) => item.id === state.caseId));
   els.tourButton.textContent = "Stop tour";
+  let tourStep = document.getElementById("tourStep");
+  if (!tourStep) {
+    tourStep = document.createElement("span");
+    tourStep.id = "tourStep";
+    els.tourButton.insertAdjacentElement("afterend", tourStep);
+  }
+  tourStep.textContent = "Step 1 of " + CASE_STUDIES.length;
   loadCaseStudy(CASE_STUDIES[index].id);
   state.tourTimer = window.setInterval(() => {
     index = (index + 1) % CASE_STUDIES.length;
     loadCaseStudy(CASE_STUDIES[index].id);
+    document.getElementById("tourStep").textContent = "Step " + (index + 1) + " of " + CASE_STUDIES.length;
     state.tourReplayTimeout = window.setTimeout(() => {
       if (!state.replayPlaying) toggleReplay();
     }, 1300);

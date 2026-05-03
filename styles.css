@@ -589,6 +589,11 @@ body[data-page="home"] .chart-area {
   display: none !important;
 }
 
+.ctrl-disabled {
+  opacity: 0.35;
+  pointer-events: none;
+}
+
 .date-tools {
   display: grid;
   grid-template-columns: 38px minmax(148px, 1fr) 38px;
@@ -2854,3 +2859,8 @@ body[data-page="home"] .market-strip {
 /* GitHub nav link */
 .nav-github { display: flex; align-items: center; color: rgba(255,255,255,0.4); transition: color 0.2s; margin-left: 0.75rem; text-decoration: none; flex-shrink: 0; }
 .nav-github:hover { color: rgba(255,255,255,0.9); }
+
+/* hide duplicate TradingView attribution in split view */
+.split .chart-pane:last-child .tv-lightweight-charts a[href*="tradingview"] {
+  display: none;
+}
